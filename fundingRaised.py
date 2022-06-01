@@ -1,134 +1,65 @@
 import csv
 
-class Funding_Raised:
+
+def load_data(filepath: str = "startup_funding.csv") -> tuple:
+    """
+    Loads data from a csv file and returns tuple of columns and rows in a list
+    """
+    with open(filepath, "rt") as file:
+        data = csv.reader(file, delimiter=',', quotechar='"')
+        rows = [row for row in data]
+        return rows[0], rows[1:]
+
+
+class FundingRaised:
+
     @staticmethod
-    def where(options = {}):
-        fnd = open("startup_funding.csv", "rt")
-        d = csv.reader(fnd, delimiter=',', quotechar='"')
-        csv_data = []
-        for row in d:
-            csv_data.append(row)
-
-        funding = []
-        if 'company_name' in options:
-            result = []
-            for row in csv_data:
-                if row[1] == options['company_name']:
-                    result.append(row)
-            csv_data = result
-
-        if 'city' in options:
-            result = []
-            for row in csv_data:
-                if row[4] == options['city']:
-                    result.append(row)
-            csv_data = result
-
-        if 'state' in options:
-            result = []
-            for row in csv_data:
-                if row[5] == options['state']:
-                    result.append(row)
-            csv_data = result
-
-        if 'round' in options:
-            result = []
-            for row in csv_data:
-                if row[9] == options['round']:
-                    result.append(row)
-            csv_data = result
-
+    def where(options: dict) -> list:
+        """
+        Returns all occurrences matching given options
+        """
+        columns, csv_data = load_data()
         output = []
+
+        if not(set(options.keys()).issubset(set(columns))):
+            raise InvalidOptions
+
         for row in csv_data:
-            mapped = {}
-            mapped['permalink'] = row[0]
-            mapped['company_name'] = row[1]
-            mapped['number_employees'] = row[2]
-            mapped['category'] = row[3]
-            mapped['city'] = row[4]
-            mapped['state'] = row[5]
-            mapped['funded_date'] = row[6]
-            mapped['raised_amount'] = row[7]
-            mapped['raised_currency'] = row[8]
-            mapped['round'] = row[9]
-            output.append(mapped)
+            options_match = []
+            for key, value in options.items():
+                if row[columns.index(key)] == value:
+                    options_match.append(True)
+                else:
+                    options_match.append(False)
+            if all(match for match in options_match):
+                output.append({row_name: row_data for (row_name, row_data) in zip(columns, row)})
 
         return output
 
     @staticmethod
-    def find_by(options):
-        fnd = open("startup_funding.csv", "rt")
+    def find_by(options: dict) -> dict:
+        """
+        Returns first occurrence matching given options
+        """
+        columns, csv_data = load_data()
 
-        data = csv.reader(fnd, delimiter=',', quotechar='"')
-        csv_data = []
-        for row in data:
-            csv_data.append(row)
-
-        if 'company_name' in options:
-            for row in csv_data:
-                if row[1] == options['company_name']:
-                    mapped = {}
-                    mapped['permalink'] = row[0]
-                    mapped['company_name'] = row[1]
-                    mapped['number_employees'] = row[2]
-                    mapped['category'] = row[3]
-                    mapped['city'] = row[4]
-                    mapped['state'] = row[5]
-                    mapped['funded_date'] = row[6]
-                    mapped['raised_amount'] = row[7]
-                    mapped['raised_currency'] = row[8]
-                    mapped['round'] = row[9]
-                    return mapped
-
-        if 'city' in options:
-            for row in csv_data:
-                if row[4] == options['city']:
-                    mapped = {}
-                    mapped['permalink'] = row[0]
-                    mapped['company_name'] = row[1]
-                    mapped['number_employees'] = row[2]
-                    mapped['category'] = row[3]
-                    mapped['city'] = row[4]
-                    mapped['state'] = row[5]
-                    mapped['funded_date'] = row[6]
-                    mapped['raised_amount'] = row[7]
-                    mapped['raised_currency'] = row[8]
-                    mapped['round'] = row[9]
-                    return mapped
-
-        if 'state' in options:
-            for row in csv_data:
-                if row[5] == options['state']:
-                    mapped = {}
-                    mapped['permalink'] = row[0]
-                    mapped['company_name'] = row[1]
-                    mapped['number_employees'] = row[2]
-                    mapped['category'] = row[3]
-                    mapped['city'] = row[4]
-                    mapped['state'] = row[5]
-                    mapped['funded_date'] = row[6]
-                    mapped['raised_amount'] = row[7]
-                    mapped['raised_currency'] = row[8]
-                    mapped['round'] = row[9]
-                    return mapped
-
-        if 'round' in options:
-            for row in csv_data:
-                if row[9] == options['round']:
-                    mapped = {}
-                    mapped['permalink'] = row[0]
-                    mapped['company_name'] = row[1]
-                    mapped['number_employees'] = row[2]
-                    mapped['category'] = row[3]
-                    mapped['city'] = row[4]
-                    mapped['state'] = row[5]
-                    mapped['funded_date'] = row[6]
-                    mapped['raised_amount'] = row[7]
-                    mapped['raised_currency'] = row[8]
-                    mapped['round'] = row[9]
-                    return mapped
+        for row in csv_data:
+            options_match = []
+            for key, value in options.items():
+                if row[columns.index(key)] == value:
+                    options_match.append(True)
+                else:
+                    options_match.append(False)
+            if all(match for match in options_match):
+                return {row_name: row_data for (row_name, row_data) in zip(columns, row)}
 
         raise RecordNotFound
 
+
 class RecordNotFound(Exception):
-    pass
+    print("Record not found")
+
+
+class InvalidOptions(Exception):
+    print("Invalid options")
+
